@@ -17,7 +17,6 @@ var geomZ = 1;
 
 var SUBCUBE_SIZE = 300;
 var SUBCUBE_DISTANCE_INDEX = 1.1;
-var ROTATION_STEP = 100;
 
 /*
 var paper_white = new THREE.TextureLoader().load( 'paper_white.jpg');
@@ -28,22 +27,15 @@ var paper_green = new THREE.TextureLoader().load( 'paper_green.jpg');
 var paper_blue = new THREE.TextureLoader().load( 'paper_blue.jpg');
  */
 
-var CUBE_DIMENSION = 3; ////////////////////////////////----------////////////////////////////////////////
+var CUBE_DIMENSION = 7; ////////////////////////////////----------////////////////////////////////////////
 
 function Side(faces, color) {
     this.faces = faces || [];
     this.color = color;
 }
 
-Side.prototype.IsFaceOnSide = function (face){
-    for(var i in this.faces){
-        if(this.faces[i] == face) return true;
-    }
-    return false;
-};
-
-var right = new Side([geomX * 0, geomX * 2 - 1], red);//0,1
-var left = new Side([geomX * 2, geomX * 4 - 1], orange);//2,3
+var right = new Side([geomX * 0, geomX * 2 - 1], red);
+var left = new Side([geomX * 2, geomX * 4 - 1], orange);
 
 var up = new Side([geomX * 4 + geomY * 0, geomX * 4 + geomY * 2 - 1], white);
 var down = new Side([geomX * 4 + geomY * 2, geomX * 4 + geomY * 4 - 1], yellow);
@@ -87,7 +79,7 @@ scene.add(light2);
 render = new THREE.WebGLRenderer();
 render.setSize(W, H);
 container.appendChild(render.domElement);
-// render.setClearColor(0xffffff,1);
+render.setClearColor(0xffffff,1);
 
 
 //creating subCube geometry and painting
@@ -167,15 +159,15 @@ for (var x = 0; x < CUBE_DIMENSION; x++) {
     }
 }
 
-function getRotatedIndex(x, y, clockWise = true) {
+function getRotatedIndex(x, y, clockWise = true) { ////////////////////////??????????????????????????
     var indexes = {};
     if (clockWise) {
-        indexes = {
+        indexes = { //rotate clockWise
             y : x,
             x : (CUBE_DIMENSION - y - 1)
         };
     } else {
-        indexes = { 
+        indexes = { //rotate counterClockWise
             y : (CUBE_DIMENSION - x - 1),
             x : y
         };
@@ -218,13 +210,6 @@ function rotateLayer(axis, layerNum, clockWise = true) {
                 }
             }
         }
-        
-    // var step = function(){   обработка плавности проворота TODO
-        // setTimeout(step, 100);
-        //...действие...
-    // }   
-    // step();
-        
         if(clockWise){
             rotateGroup.rotation.x += rotateAngle;
         }else{
@@ -390,83 +375,39 @@ var hypotenuse = Math.sqrt(2 * cathetus * cathetus);
 
 
 
+function onDocumentMouseMove( event ) {
+				event.preventDefault();
+				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+			}
 
 
 ///////////////////////////////////////////////////////////////////////
 
-document.addEventListener('mousedown', onMouseDown);
-document.addEventListener('mouseup', onMouseUp);
-document.addEventListener('mousemove', onMouseMove, false );
-//document.addEventListener('mouseover', onMouseOver);
+document.addEventListener('mousedown', onMouseClick);
+document.addEventListener('mousemove', onDocumentMouseMove, false );
 
-var xIndex, yIndex, zIndex;
+var xMove, yMove, zMove;
 var raycaster = new THREE.Raycaster();
 raycaster.linePrecision = 0.1;
 var mouse = new THREE.Vector2();
-var mouseOverStart = new THREE.Vector2();
-var mouseOverEnd = new THREE.Vector2();
-var isMouseDown = false;
-var intersectedElem;
 
-function onMouseDown(event) {
-    if(event.ctrlKey) return;
+function onMouseClick(event, axis) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-    mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
-    mouseOverStart.x = event.clientX;
-    mouseOverStart.y = event.clientY;
+    mouse.y =  - (event.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
-    isMouseDown = true;
+
     var intersects = raycaster.intersectObjects(scene.children);
     if(intersects[0]){
-        intersectedElem = intersects[0];
         // intersects[0].object.position.x += 300 ;
         // SUBCUBE_SIZE * (vector.x + centerShift) * SUBCUBE_DISTANCE_INDEX,
-        xIndex = Math.round((intersects[0].object.position.x+centerShift)/(SUBCUBE_SIZE*SUBCUBE_DISTANCE_INDEX) + sizeShift);
-        yIndex = Math.round((intersects[0].object.position.y+centerShift)/(SUBCUBE_SIZE*SUBCUBE_DISTANCE_INDEX) + sizeShift);
-        zIndex = Math.round((intersects[0].object.position.z+centerShift)/(SUBCUBE_SIZE*SUBCUBE_DISTANCE_INDEX) + sizeShift);
-        console.log(xIndex,yIndex,zIndex);
-        console.log(intersects[0].faceIndex);
+        xMove = Math.round((intersects[0].object.position.x+centerShift)/(SUBCUBE_SIZE*SUBCUBE_DISTANCE_INDEX) + sizeShift);
+        yMove = Math.round((intersects[0].object.position.y+centerShift)/(SUBCUBE_SIZE*SUBCUBE_DISTANCE_INDEX) + sizeShift);
+        zMove = Math.round((intersects[0].object.position.z+centerShift)/(SUBCUBE_SIZE*SUBCUBE_DISTANCE_INDEX) + sizeShift);
+        console.log(xMove,yMove,zMove);
+        console.log(raycaster.linePrecision);
     }
 }
-
-function onMouseUp( event ) {
-    if(event.ctrlKey) return;
-    intersectedElem = null;
-    isMouseDown = false;
-}
-
-function onMouseMove( event ) {
-    if(event.ctrlKey) return;
-    event.preventDefault();
-    mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-    mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-    mouseOverEnd.x = event.clientX;
-    mouseOverEnd.y = event.clientY;
-    
-    if(isMouseDown && intersectedElem &&
-                (mouseOverEnd.x - mouseOverStart.x < -ROTATION_STEP || mouseOverEnd.y - mouseOverStart.y < -ROTATION_STEP ||
-                mouseOverEnd.x - mouseOverStart.x > ROTATION_STEP || mouseOverEnd.y - mouseOverStart.y > ROTATION_STEP)) {
-        isMouseDown = false;
-        //axis, layerNum, clockWise
-       
-        if(front.IsFaceOnSide(intersectedElem.faceIndex)){
-            if(mouseOverEnd.x - mouseOverStart.x < -ROTATION_STEP){
-                rotateLayer(1,yIndex,false);
-            }else if(mouseOverEnd.x - mouseOverStart.x > ROTATION_STEP){
-                rotateLayer(1,yIndex,true);
-            }else if(mouseOverEnd.y - mouseOverStart.y < -ROTATION_STEP){
-                rotateLayer(0,xIndex,false);
-            }else if(mouseOverEnd.y - mouseOverStart.y > ROTATION_STEP){
-                rotateLayer(0,xIndex,true);
-            }
-        }
-        
-        //rotateLayer()
-    }
-}
-
-
-
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -478,11 +419,12 @@ animate();
 function animate() {
     requestAnimationFrame(animate);
     
+    TWEEN.update();
     camera.lookAt(scene.position);
     render.render(scene, camera);
 }
     
-new THREE.OrbitControls(camera, render.domElement); // вращение камеры
+controls = new THREE.OrbitControls(camera, render.domElement); // вращение камеры
 
 window.addEventListener('resize', onWindowResize, false);
 
