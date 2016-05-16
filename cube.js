@@ -30,9 +30,29 @@ var paper_blue = new THREE.TextureLoader().load( 'paper_blue.jpg');
 
 var CUBE_DIMENSION = 3; ////////////////////////////////----------////////////////////////////////////////
 
-function Side(faces, color) {
+function Side(faces, sideName) {
     this.faces = faces || [];
-    this.color = color;
+    this.sideName = sideName;
+    switch(sideName){
+        case "right":
+            this.color = red;
+            break;
+        case "left":
+            this.color = orange;
+            break;
+        case "up":
+            this.color = white;
+            break;
+        case "down":
+            this.color = yellow;
+            break;
+        case "front":
+            this.color = green;
+            break;
+        case "back":
+            this.color = blue;
+            break;
+    }
 }
 
 Side.prototype.IsFaceOnSide = function (face){
@@ -42,14 +62,16 @@ Side.prototype.IsFaceOnSide = function (face){
     return false;
 };
 
-var right = new Side([geomX * 0, geomX * 2 - 1], red);//0,1
-var left = new Side([geomX * 2, geomX * 4 - 1], orange);//2,3
+var right = new Side([geomX * 0, geomX * 2 - 1], "right");//0,1
+var left = new Side([geomX * 2, geomX * 4 - 1], "left");//2,3
 
-var up = new Side([geomX * 4 + geomY * 0, geomX * 4 + geomY * 2 - 1], white);
-var down = new Side([geomX * 4 + geomY * 2, geomX * 4 + geomY * 4 - 1], yellow);
+var up = new Side([geomX * 4 + geomY * 0, geomX * 4 + geomY * 2 - 1], "up");
+var down = new Side([geomX * 4 + geomY * 2, geomX * 4 + geomY * 4 - 1], "down");
 
-var front = new Side([geomX * 4 + geomY * 4 + geomZ * 0, geomX * 4 + geomY * 4 + geomZ * 2 - 1], green);
-var back = new Side([geomX * 4 + geomY * 4 + geomZ * 2, geomX * 4 + geomY * 4 + geomZ * 4 - 1], blue);
+var front = new Side([geomX * 4 + geomY * 4 + geomZ * 0, geomX * 4 + geomY * 4 + geomZ * 2 - 1], "front");
+var back = new Side([geomX * 4 + geomY * 4 + geomZ * 2, geomX * 4 + geomY * 4 + geomZ * 4 - 1], "back");
+
+var cubeFaces = [right, left, up, down, front, back];
 
 var cubePieces = [];
 var cubeOneDimention = [];
@@ -427,6 +449,7 @@ function onMouseDown(event) {
         console.log(xIndex,yIndex,zIndex);
         console.log(intersects[0].faceIndex);
     }
+    console.log(camera.position.x,camera.position.y,camera.position.z);
 }
 
 function onMouseUp( event ) {
@@ -448,8 +471,28 @@ function onMouseMove( event ) {
                 mouseOverEnd.x - mouseOverStart.x > ROTATION_STEP || mouseOverEnd.y - mouseOverStart.y > ROTATION_STEP)) {
         isMouseDown = false;
         //axis, layerNum, clockWise
+       var side;
+       for(var i in cubeFaces){
+           if(cubeFaces[i].IsFaceOnSide(intersectedElem.faceIndex)){
+               side = cubeFaces[i];
+               break;
+           }
+           
+       }
+       console.log(side.sideName);
        
-        if(front.IsFaceOnSide(intersectedElem.faceIndex)){
+       if(mouseOverEnd.x - mouseOverStart.x < -ROTATION_STEP){
+            rotateLayer(1,yIndex,false);
+        }else if(mouseOverEnd.x - mouseOverStart.x > ROTATION_STEP){
+            rotateLayer(1,yIndex,true);
+        }else if(mouseOverEnd.y - mouseOverStart.y < -ROTATION_STEP){
+            rotateLayer(0,xIndex,false);
+        }else if(mouseOverEnd.y - mouseOverStart.y > ROTATION_STEP){
+            rotateLayer(0,xIndex,true);
+        }
+       
+       
+        /*if(front.IsFaceOnSide(intersectedElem.faceIndex)){
             if(mouseOverEnd.x - mouseOverStart.x < -ROTATION_STEP){
                 rotateLayer(1,yIndex,false);
             }else if(mouseOverEnd.x - mouseOverStart.x > ROTATION_STEP){
@@ -459,7 +502,7 @@ function onMouseMove( event ) {
             }else if(mouseOverEnd.y - mouseOverStart.y > ROTATION_STEP){
                 rotateLayer(0,xIndex,true);
             }
-        }
+        }*/
         
         //rotateLayer()
     }
