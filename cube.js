@@ -1,4 +1,5 @@
-﻿var camera, scene, render, container;
+﻿/// <reference path="libs/three.d.ts" />
+var camera, scene, render, container;
 var W, H;
 
 var white = 0xE5E5E5;
